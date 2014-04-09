@@ -1,0 +1,68 @@
+/* ヘッダー部分 */
+.nav {
+	display: block;
+	text-align: center;
+}
+.container {
+	margin: 0 auto;
+}
+.calendar-container {
+	margin: 0 auto;
+}
+
+/* table */
+table {
+	display: inline-table;
+	vertical-align: top;
+	margin: 0 auto;
+	padding: 10px;
+}
+table.main,
+table.main caption {
+	background-color: #FFD;
+}
+
+/* セルサイズ */
+td {
+	width: 70px;
+	height: 70px;
+	overflow: hidden;
+	background-color: #DDD;
+	vertical-align: top;
+}
+/*.main td {
+	width: 100px;
+	height: 100px;
+}*/
+th {
+	background-color: #DDD;
+}
+
+/* 日付 */
+.day{
+	font-size: 0.8em;
+}
+
+/* セル色 */
+.saturday {
+	background-color: #CCF;
+}
+.holiday,
+.sunday {
+	background-color: #FCC;
+}
+.today {
+	background-color: #FFC;
+}
+
+/* フィードリンク */
+.feed {
+	display: inline-block;
+	font-size: .7em;
+	text-decoration: none;
+	color: #04C;
+	line-height: 1.1;
+}
+.feed:hover {
+	color: #03A;
+}
