@@ -50,7 +50,8 @@ $auc_topic = loadAucTopic();
  * @param  int $month MM形式の数字
  * @return array 'year' => YYYY, 'month' => MM, 'calendar' => array[4-6][6]
  */
-function calendarBuild($year, $month) {
+function calendarBuild($year, $month)
+{
     // 桁数整形
     $year = sprintf('%04d', $year);
     $month = sprintf('%02d', $month);
@@ -70,7 +71,7 @@ function calendarBuild($year, $month) {
         // カレンダー連想配列に日付を代入
         $calendar[$week_index][$current_week++] = $current_date;
         // 土曜日(6)の場合、次の列へ
-        if($current_week > 6) {
+        if ($current_week > 6) {
             $week_index += 1;
             $current_week = 0;
         }
@@ -102,7 +103,7 @@ function dayInfo($calendarAry, $weekday, $date = null)
     $class = array();
 
     // 日付がある場合は桁数整形、年月日をクラスに追加
-    if(isset($date)) {
+    if (isset($date)) {
         $date = sprintf('%02d', $date);
         array_push($class, $year.'-'.$month.'-'.$date);
     }
@@ -126,7 +127,7 @@ function dayInfo($calendarAry, $weekday, $date = null)
     }
 
     // 空の場合は何も返さない
-    if(empty($class)) {
+    if (empty($class)) {
         return;
     }
     return implode(' ', $class);
@@ -156,7 +157,7 @@ function getHolidays($year, $month, $end_year = null, $end_month = null)
         $results = json_decode($results, true); // 連想配列で格納
         $holidays = array();
         // 空っぽの時は終了
-        if(empty($results['feed']['entry'])) {
+        if (empty($results['feed']['entry'])) {
             return;
         }
         foreach ($results['feed']['entry'] as $val) {
@@ -219,16 +220,20 @@ try {
 } catch (PDOException $e) {
     exit('データベース接続失敗 '.$e->getMessage());
 }
-function createTask($year, $month, $date, $task) {
+function createTask($year, $month, $date, $task)
+{
     $statement = $pdo->prepare('INSERT INTO tasks ()');
 }
-function readTasks($yaer, $month) {
+function readTasks($yaer, $month)
+{
     $statement->fetch(PDO::FETCH_ASSOC);
 }
-function updateTask($task_id, $task) {
+function updateTask($task_id, $task)
+{
 
 }
-function deleteTask($task_id) {
+function deleteTask($task_id)
+{
 
 }
 ?>
@@ -279,7 +284,7 @@ function deleteTask($task_id) {
                             <div class="details">
                                 <?php echo $current_calendar['holidays'][$the_day_format] ?>
                                 <?php if (isset($auc_topic[$the_day_format])) : ?>
-                                    <a class="feed" href="<?php echo $auc_topic[$the_day_format]['link'] ?>" target="_blank"><?php echo shortenStr($auc_topic[$the_day_format]['title']) ?></a>
+                                    <a class="feed" href="<?php echo $auc_topic[$the_day_format]['link'] ?>" target="_blank" title="<?php echo $auc_topic[$the_day_format]['title'] ?>"><?php echo shortenStr($auc_topic[$the_day_format]['title']) ?></a>
                                 <?php endif ?>
                             </div>
                         </td>
