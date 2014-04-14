@@ -6,11 +6,11 @@ date_default_timezone_set('Asia/Tokyo');
 $now = time();
 $today = getdate($now);
 // 中心の月、パラメータで渡されていたらその月
-if (isset($_GET['Y'])) {
-    $year = $_GET['Y'];
+if (isset($_GET['year'])) {
+    $year = $_GET['year'];
 }
-if (isset($_GET['M'])) {
-    $month = sprintf('%02d', $_GET['M']);
+if (isset($_GET['month'])) {
+    $month = sprintf('%02d', $_GET['month']);
 }
 // 整数が代入されているか確認、なければ現在の年月を代入
 if (!ctype_digit($year)) {
@@ -248,8 +248,8 @@ function deleteTask($task_id) {
             <a href="<?php echo '?Y='.$next['year'].'&M='.$next['month'] ?>" class="next">来月</a>
 
             <form action="" id="combo">
-                <input type="text" size="4" value="<?php echo $year ?>" maxlength="4" name="Y">
-                <select name="M">
+                <input type="text" size="4" value="<?php echo $year ?>" maxlength="4" name="year">
+                <select name="month">
                     <?php for ($i_month=1; $i_month <= 12; $i_month++) : ?>
                         <option value="<?php echo $i_month ?>"<?php if($i_month == $month) echo ' selected' ?>><?php echo $i_month ?></option>
                     <?php endfor ?>
