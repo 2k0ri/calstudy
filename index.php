@@ -17,7 +17,7 @@ if (!ctype_digit($year)) {
 	$year = date('Y', $now);
 }
 if (!ctype_digit($month)) {
-	$year = date('m', $now);
+	$month = date('m', $now);
 }
 // 中心の月のtime()表記
 $target_time = strtotime($year.$month.'01');
@@ -202,6 +202,7 @@ function shortenStr($str, $len = 20) {
 }
 /**
  * PDOでデータベース接続
+ * mysql> create database calstudy;
  * mysql> grant all privileges on calstudy.* to calstudy@localhost identified by 'passwd';
  */
 try {
