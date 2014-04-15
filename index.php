@@ -212,46 +212,6 @@ function getAucTopics()
     return $feeds;
 }
 /**
- * オクトピRSS読み込み XMLReader版
- * @return [type] [description]
- */
-function getAucTopicsX()
-{
-    $xml = new XMLReader();
-    $xml->open(AUC_TOPIC_RSS, null, LIBXML_COMPACT);
-
-    $items = array();
-    $i = 0;
-    $isParserActive = false;
-    $node_types = array('pubDate', 'title', 'link');
-
-    while ($xml->read()) {
-        $node_type = $xml->nodeType;
-        if ($node_type != XMLReader::ELEMENT && $node_type != XMLReader::END_ELEMENT) {
-            continue;
-        } elseif ($xml->name == 'pubDate') { // 日付の取得
-            $xml->read();
-            $i = date('Y-m-d', strtotime($xml->value));
-        } elseif ($xml->name == 'item') {
-            if (($node_type == XMLReader::END_ELEMENT) && $isParserActive) {
-                // $i += 1;
-            }
-            $isParserActive = ($node_type != XMLReader::END_ELEMENT);
-        }
-        if (!$isParserActive || $node_type == XMLReader::END_ELEMENT) {
-            continue;
-        }
-
-        $name = $xml->name;
-
-        if (in_array($name, $node_types)) {
-            $xml->read();
-            $items[$i][$name] = $xml->value;
-        }
-    }
-    return $items;
-}
-/**
  * 指定文字数以上の文字列を省略して返す
  * @param  string  $str 元の文字列
  * @param  integer $len 上限文字数(マルチバイト)
