@@ -2,6 +2,9 @@
 // タイムゾーン、ロケールの設定
 setlocale(LC_TIME, 'ja_JP.utf8');
 date_default_timezone_set('Asia/Tokyo');
+// GoogleカレンダーURL
+define(GCAL_BASEURL, 'http://www.google.com/calendar/feeds/%s/public/full-noattendees?start-min=%s&start-max=%s&max-results=%d&alt=json');
+define(GCAL_HOLIDAY_ADDRESS, 'outid3el0qkcrsuf89fltf7a4qbacgt9@import.calendar.google.com'); // 'japanese@holiday.calendar.google.com'
 // 今日の年月日
 $now = time();
 $today = getdate($now);
@@ -34,15 +37,18 @@ $next = array(
 
 // 週表記
 $week_letters = array('日','月','火','水','木','金','土');
+
+// オクトピ
+$auc_topics = loadAucTopic();
+// 祝日３ヶ月分
+$holidays = getHolidays($last['year'], $last['month'], $next['year'], $next['month']);
+
 // 先月、今月、来月分のカレンダーの配列
 $calendars = array(
     calendarBuild($last['year'], $last['month']),
     calendarBuild($year, $month),
     calendarBuild($next['year'], $next['month']),
 );
-
-// オクトピ
-$auc_topic = loadAucTopic();
 
 /**
  * 引数をもとにyear, month, calendar連想配列を格納した配列を返す
@@ -83,20 +89,20 @@ function calendarBuild($year, $month)
     return array(
         'year' => $year,
         'month' => $month,
-        'calendar' => $calendar,
-        'holidays' => getHolidays($year, $month)
+        'calendar' => $calendar
     );
 }
 
 /**
  * 曜日・日の情報を取得、class属性を返す
+ * @param  array $calendarAry
  * @param  int $weekday
- * @param  int $day
+ * @param  int $date
  * @return string
  */
 function dayInfo($calendarAry, $weekday, $date = null)
 {
-    global $today;
+    global $today, $holidays;
     $year = $calendarAry['year'];
     $month = $calendarAry['month'];
 
@@ -118,11 +124,11 @@ function dayInfo($calendarAry, $weekday, $date = null)
             break;
     }
     // 今日の判定
-    if ($today['year'] == $year && $today['mon'] == $month && $today['mday'] == ltrim($date, 0)) {
+    if (isset($date) && $today['year'] == $year && $today['mon'] == $month && $today['mday'] == ltrim($date, 0)) {
         array_push($class, 'today');
     }
     // 祝日判定
-    if (isset($calendarAry['holidays'][$year.'-'.$month.'-'.$date])) {
+    if (isset($date) && isset($holidays[$year.'-'.$month.'-'.$date])) {
         array_push($class, 'holiday');
     }
 
@@ -143,9 +149,6 @@ function dayInfo($calendarAry, $weekday, $date = null)
  */
 function getHolidays($start_year, $start_month, $end_year = null, $end_month = null)
 {
-    const $gcalapi_baseurl = 'http://www.google.com/calendar/feeds/%s/public/full-noattendees?start-min=%s&start-max=%s&max-results=%d&alt=json'
-    const $gcal_holiday_address = 'outid3el0qkcrsuf89fltf7a4qbacgt9@import.calendar.google.com'; // 'japanese@holiday.calendar.google.com'
-
     $date_prefix = $start_year.'-'.$start_month.'-';
     // $end_year, $end_monthがある場合は終了日時を変更
     if (isset($end_year) && isset($end_month)) {
@@ -157,8 +160,8 @@ function getHolidays($start_year, $start_month, $end_year = null, $end_month = n
     $end_date = date('t', strtotime($end_date_prefix.'01'));
 
     $url = sprintf(
-        $gcalapi_baseurl,
-        $gcal_holiday_address,
+        GCAL_BASEURL,
+        GCAL_HOLIDAY_ADDRESS,
         $date_prefix.'01', // 月初
         $end_date_prefix.$end_date, // 月末
         30 // 最大取得数
@@ -167,11 +170,11 @@ function getHolidays($start_year, $start_month, $end_year = null, $end_month = n
     // JSON取得
     if ($results = file_get_contents($url)) {
         $results = json_decode($results, true); // 連想配列で格納
-        $holidays = array();
         // 空っぽの時は終了
         if (empty($results['feed']['entry'])) {
             return;
         }
+        $holidays = array();
         foreach ($results['feed']['entry'] as $val) {
             $date = $val['gd$when'][0]['startTime']; // 日付取得
             $title = explode(' / ', $val['title']['$t']); // 祝日取得、分割
@@ -188,7 +191,7 @@ function getHolidays($start_year, $start_month, $end_year = null, $end_month = n
  */
 function loadAucTopic()
 {
-    const $rss = 'http://aucfan.com/article/feed/'; // RSSフィードURL
+    $rss = 'http://aucfan.com/article/feed/'; // RSSフィードURL
     $xml = simplexml_load_file($rss); // SimpleXMLオブジェクトとして取得
     $feeds = array();
     foreach ($xml->channel->item as $item) {
@@ -294,9 +297,11 @@ function deleteTask($task_id)
                         <td class="<?php echo dayInfo($current_calendar, $j_weekdaynum, $the_day) ?>">
                             <span class="day"><?php echo $the_day ?></span>
                             <div class="details">
-                                <?php echo $current_calendar['holidays'][$the_day_format] ?>
-                                <?php if (isset($auc_topic[$the_day_format])) : ?>
-                                    <a class="feed" href="<?php echo $auc_topic[$the_day_format]['link'] ?>" target="_blank" title="<?php echo $auc_topic[$the_day_format]['title'] ?>"><?php echo shortenStr($auc_topic[$the_day_format]['title']) ?></a>
+                                <?php if (isset($holidays[$the_day_format])) {
+                                    echo $holidays[$the_day_format];
+                                } ?>
+                                <?php if (isset($auc_topics[$the_day_format])) : ?>
+                                    <a class="feed" href="<?php echo $auc_topics[$the_day_format]['link'] ?>" target="_blank" title="<?php echo $auc_topics[$the_day_format]['title'] ?>"><?php echo shortenStr($auc_topics[$the_day_format]['title']) ?></a>
                                 <?php endif ?>
                             </div>
                         </td>
