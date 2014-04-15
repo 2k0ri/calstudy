@@ -44,6 +44,7 @@ $week_letters = array('日','月','火','水','木','金','土');
 $holidays = getHolidays($last['year'], $last['month'], $next['year'], $next['month']);
 // オクトピ
 $auc_topics = getAucTopics();
+var_dump($auc_topics);
 
 // 先月、今月、来月分のカレンダーの配列
 $calendars = array(
@@ -193,12 +194,13 @@ function getHolidays($start_year, $start_month, $end_year = null, $end_month = n
  */
 function getAucTopics()
 {
-    $xml = simplexml_load_file(AUC_TOPIC_RSS); // SimpleXMLオブジェクトとして取得
-    if (empty($xml->channel->item)) {
+
+    $xml = simplexml_load_file(AUC_TOPIC_RSS)->channel->item; // SimpleXMLオブジェクトとして取得
+    if (empty($xml)) {
         return;
     }
     $feeds = array();
-    foreach ($xml->channel->item as $item) {
+    foreach ($xml as $item) {
         $date = (string)$item->pubDate;
         $date = date('Y-m-d', strtotime($date)); // YYYY-mm-dd 形式に変換
 
@@ -209,6 +211,46 @@ function getAucTopics()
         $feeds[$date]['link'] = $link;
     }
     return $feeds;
+}
+/**
+ * オクトピRSS読み込み XMLReader版
+ * @return [type] [description]
+ */
+function getAucTopicsX()
+{
+    $xml = new XMLReader();
+    $xml->open(AUC_TOPIC_RSS, null, LIBXML_COMPACT);
+
+    $items = array();
+    $i = 0;
+    $isParserActive = false;
+    $node_types = array('pubDate', 'title', 'link');
+
+    while ($xml->read()) {
+        $node_type = $xml->nodeType;
+        if ($node_type != XMLReader::ELEMENT && $node_type != XMLReader::END_ELEMENT) {
+            continue;
+        } elseif ($xml->name == 'pubDate') { // 日付の取得
+            $xml->read();
+            $i = date('Y-m-d', strtotime($xml->value));
+        } elseif ($xml->name == 'item') {
+            if (($node_type == XMLReader::END_ELEMENT) && $isParserActive) {
+                // $i += 1;
+            }
+            $isParserActive = ($node_type != XMLReader::END_ELEMENT);
+        }
+        if (!$isParserActive || $node_type == XMLReader::END_ELEMENT) {
+            continue;
+        }
+
+        $name = $xml->name;
+
+        if (in_array($name, $node_types)) {
+            $xml->read();
+            $items[$i][$name] = $xml->value;
+        }
+    }
+    return $items;
 }
 /**
  * 指定文字数以上の文字列を省略して返す
