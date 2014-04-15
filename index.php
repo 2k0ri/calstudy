@@ -45,9 +45,9 @@ $holidays = getHolidays($last['year'], $last['month'], $next['year'], $next['mon
 
 // 先月、今月、来月分のカレンダーの配列
 $calendars = array(
-    calendarBuild($last['year'], $last['month']),
-    calendarBuild($year, $month),
-    calendarBuild($next['year'], $next['month']),
+    buildCalendar($last['year'], $last['month']),
+    buildCalendar($year, $month),
+    buildCalendar($next['year'], $next['month']),
 );
 
 /**
@@ -56,7 +56,7 @@ $calendars = array(
  * @param  int $month MM形式の数字
  * @return array 'year' => YYYY, 'month' => MM, 'calendar' => array[4-6][6]
  */
-function calendarBuild($year, $month)
+function buildCalendar($year, $month)
 {
     // 桁数整形
     $year = sprintf('%04d', $year);
