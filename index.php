@@ -135,20 +135,32 @@ function dayInfo($calendarAry, $weekday, $date = null)
 
 /**
  * YYYYとMMを引数に祝日情報を取得、日付(YYYY-MM-DD)をキーとする連想配列を返す
- * @param  int    $year YYYY
- * @param  int    $month MM
+ * @param  int    $start_year YYYY
+ * @param  int    $start_month MM
+ * @param  int    $end_year = null YYYY 終了年
+ * @param  int    $end_month = null MM 終了月
  * @return array $holidays['2014-04-08']:string
  */
-function getHolidays($year, $month, $end_year = null, $end_month = null)
+function getHolidays($start_year, $start_month, $end_year = null, $end_month = null)
 {
-    $date_prefix = $year.'-'.$month.'-';
-    $end_date = date('t', strtotime($date_prefix.'01'));
+    const $gcalapi_baseurl = 'http://www.google.com/calendar/feeds/%s/public/full-noattendees?start-min=%s&start-max=%s&max-results=%d&alt=json'
+    const $gcal_holiday_address = 'outid3el0qkcrsuf89fltf7a4qbacgt9@import.calendar.google.com'; // 'japanese@holiday.calendar.google.com'
+
+    $date_prefix = $start_year.'-'.$start_month.'-';
+    // $end_year, $end_monthがある場合は終了日時を変更
+    if (isset($end_year) && isset($end_month)) {
+        $end_date_prefix = $end_year.'-'.$end_month.'-';
+    } else {
+        $end_date_prefix = $date_prefix;
+    }
+    // 終了月の日数
+    $end_date = date('t', strtotime($end_date_prefix.'01'));
 
     $url = sprintf(
-        'http://www.google.com/calendar/feeds/%s/public/full-noattendees?start-min=%s&start-max=%s&max-results=%d&alt=json',
-        'outid3el0qkcrsuf89fltf7a4qbacgt9@import.calendar.google.com', // 'japanese@holiday.calendar.google.com',
+        $gcalapi_baseurl,
+        $gcal_holiday_address,
         $date_prefix.'01', // 月初
-        $date_prefix.$end_date, // 月末
+        $end_date_prefix.$end_date, // 月末
         30 // 最大取得数
     );
 
@@ -176,7 +188,7 @@ function getHolidays($year, $month, $end_year = null, $end_month = null)
  */
 function loadAucTopic()
 {
-    $rss = 'http://aucfan.com/article/feed/'; //RSSフィードURL
+    const $rss = 'http://aucfan.com/article/feed/'; // RSSフィードURL
     $xml = simplexml_load_file($rss); // SimpleXMLオブジェクトとして取得
     $feeds = array();
     foreach ($xml->channel->item as $item) {
@@ -248,9 +260,9 @@ function deleteTask($task_id)
 <body>
     <div class="container">
         <nav class="nav">
-            <a href="<?php echo '?Y='.$last['year'].'&M='.$last['month'] ?>" class="last">先月</a>
-            <a href="<?php echo '?Y='.$today['year'].'&M='.$today['mon'] ?>" class="this_month">今月</a>
-            <a href="<?php echo '?Y='.$next['year'].'&M='.$next['month'] ?>" class="next">来月</a>
+            <a href="<?php echo '?year='.$last['year'].'&month='.$last['month'] ?>" class="last">先月</a>
+            <a href="/calstudy/" class="this_month">今月</a>
+            <a href="<?php echo '?year='.$next['year'].'&month='.$next['month'] ?>" class="next">来月</a>
 
             <form action="" id="combo">
                 <input type="text" size="4" value="<?php echo $year ?>" maxlength="4" name="year">
