@@ -39,7 +39,7 @@ $next = array(
 $week_letters = array('日','月','火','水','木','金','土');
 
 // オクトピ
-$auc_topics = loadAucTopic();
+$auc_topics = getAucTopics();
 // 祝日３ヶ月分
 $holidays = getHolidays($last['year'], $last['month'], $next['year'], $next['month']);
 
@@ -189,7 +189,7 @@ function getHolidays($start_year, $start_month, $end_year = null, $end_month = n
  * オクトピのRSSから日付とタイトルを取得、日付(YYYY-MM-DD)をキーとする連想配列を渡す
  * @return array $feeds['2014-04-09']:array['title', 'link']
  */
-function loadAucTopic()
+function getAucTopics()
 {
     $rss = 'http://aucfan.com/article/feed/'; // RSSフィードURL
     $xml = simplexml_load_file($rss); // SimpleXMLオブジェクトとして取得
