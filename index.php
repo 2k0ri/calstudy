@@ -17,8 +17,8 @@ if (isset($_GET['year'])) {
 if (isset($_GET['month'])) {
     $month = sprintf('%02d', $_GET['month']);
 }
-// 整数が代入されているか確認、なければ現在の年月を代入
-if (!ctype_digit($year)) {
+// 整数が代入されているか/1970年以降か確認、なければ現在の年月を代入
+if (!ctype_digit($year) || strlen((int)$year) != 4) {
     $year = date('Y', $now);
 }
 if (!ctype_digit($month)) {
@@ -194,6 +194,9 @@ function getHolidays($start_year, $start_month, $end_year = null, $end_month = n
 function getAucTopics()
 {
     $xml = simplexml_load_file(AUC_TOPIC_RSS); // SimpleXMLオブジェクトとして取得
+    if (empty($xml->channel->item)) {
+        return;
+    }
     $feeds = array();
     foreach ($xml->channel->item as $item) {
         $date = (string)$item->pubDate;
@@ -272,7 +275,7 @@ function deleteTask($task_id)
                 <input type="text" size="4" value="<?php echo $year ?>" maxlength="4" name="year">
                 <select name="month">
                     <?php for ($i_month=1; $i_month <= 12; $i_month++) : ?>
-                        <option value="<?php echo $i_month ?>"<?php if($i_month == $month) echo ' selected' ?>><?php echo $i_month ?></option>
+                        <option value="<?php echo sprintf('%02d', $i_month) ?>"<?php if($i_month == $month) echo ' selected' ?>><?php echo $i_month ?></option>
                     <?php endfor ?>
                 </select>
                 <button type="submit">更新</button>
