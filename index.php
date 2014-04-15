@@ -18,7 +18,7 @@ if (isset($_GET['month'])) {
     $month = sprintf('%02d', $_GET['month']);
 }
 // 整数が代入されているか/1970年以降か確認、なければ現在の年月を代入
-if (!ctype_digit($year) || strlen((int)$year) != 4) {
+if (!ctype_digit($year) || strlen((int) $year) != 4) {
     $year = date('Y', $now);
 }
 if (!ctype_digit($month)) {
@@ -88,6 +88,7 @@ function buildCalendar($year, $month)
     for ($i=$start_weekday-1; $i >= 0; $i--) {
         $calendar[0][$i] = '';
     }
+
     return array(
         'year' => $year,
         'month' => $month,
@@ -138,6 +139,7 @@ function dayInfo($calendarAry, $weekday, $date = null)
     if (empty($class)) {
         return;
     }
+
     return implode(' ', $class);
 }
 
@@ -183,6 +185,7 @@ function getHolidays($start_year, $start_month, $end_year = null, $end_month = n
             $title = $title[0]; // 日本語部分のみ
             $holidays[$date] = $title;
         }
+
         return $holidays;
     }
 }
@@ -200,15 +203,16 @@ function getAucTopics()
     }
     $feeds = array();
     foreach ($xml as $item) {
-        $date = (string)$item->pubDate;
+        $date = (string) $item->pubDate;
         $date = date('Y-m-d', strtotime($date)); // YYYY-mm-dd 形式に変換
 
-        $title = (string)$item->title;
-        $link = (string)$item->link;
+        $title = (string) $item->title;
+        $link = (string) $item->link;
 
         $feeds[$date]['title'] = $title;
         $feeds[$date]['link'] = $link;
     }
+
     return $feeds;
 }
 /**
