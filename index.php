@@ -38,10 +38,10 @@ $next = array(
 // 週表記
 $week_letters = array('日','月','火','水','木','金','土');
 
-// オクトピ
-$auc_topics = getAucTopics();
 // 祝日３ヶ月分
 $holidays = getHolidays($last['year'], $last['month'], $next['year'], $next['month']);
+// オクトピ
+$auc_topics = getAucTopics();
 
 // 先月、今月、来月分のカレンダーの配列
 $calendars = array(
