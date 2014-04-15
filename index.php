@@ -5,6 +5,8 @@ date_default_timezone_set('Asia/Tokyo');
 // GoogleカレンダーURL
 define(GCAL_BASEURL, 'http://www.google.com/calendar/feeds/%s/public/full-noattendees?start-min=%s&start-max=%s&max-results=%d&alt=json');
 define(GCAL_HOLIDAY_ADDRESS, 'outid3el0qkcrsuf89fltf7a4qbacgt9@import.calendar.google.com'); // 'japanese@holiday.calendar.google.com'
+// オクトピRSS
+define(AUC_TOPIC_RSS, 'http://aucfan.com/article/feed/');
 // 今日の年月日
 $now = time();
 $today = getdate($now);
@@ -191,8 +193,7 @@ function getHolidays($start_year, $start_month, $end_year = null, $end_month = n
  */
 function getAucTopics()
 {
-    $rss = 'http://aucfan.com/article/feed/'; // RSSフィードURL
-    $xml = simplexml_load_file($rss); // SimpleXMLオブジェクトとして取得
+    $xml = simplexml_load_file(AUC_TOPIC_RSS); // SimpleXMLオブジェクトとして取得
     $feeds = array();
     foreach ($xml->channel->item as $item) {
         $date = (string)$item->pubDate;
