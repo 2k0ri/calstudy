@@ -3,10 +3,10 @@
 setlocale(LC_TIME, 'ja_JP.utf8');
 date_default_timezone_set('Asia/Tokyo');
 // GoogleカレンダーURL
-define(GCAL_BASEURL, 'http://www.google.com/calendar/feeds/%s/public/full-noattendees?start-min=%s&start-max=%s&max-results=%d&alt=json');
-define(GCAL_HOLIDAY_ADDRESS, 'outid3el0qkcrsuf89fltf7a4qbacgt9@import.calendar.google.com'); // 'japanese@holiday.calendar.google.com'
+const GCAL_BASEURL = 'http://www.google.com/calendar/feeds/%s/public/full-noattendees?start-min=%s&start-max=%s&max-results=%d&alt=json';
+const GCAL_HOLIDAY_ADDRESS = 'outid3el0qkcrsuf89fltf7a4qbacgt9@import.calendar.google.com'; // 'japanese@holiday.calendar.google.com'
 // オクトピRSS
-define(AUC_TOPIC_RSS, 'http://aucfan.com/article/feed/');
+const AUC_TOPIC_RSS = 'http://aucfan.com/article/feed/';
 // 今日の年月日
 $now = time();
 $today = getdate($now);
