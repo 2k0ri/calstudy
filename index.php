@@ -44,7 +44,6 @@ $week_letters = array('日','月','火','水','木','金','土');
 $holidays = getHolidays($last['year'], $last['month'], $next['year'], $next['month']);
 // オクトピ
 $auc_topics = getAucTopics();
-var_dump($auc_topics);
 
 // 先月、今月、来月分のカレンダーの配列
 $calendars = array(
