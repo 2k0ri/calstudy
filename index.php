@@ -244,7 +244,20 @@ try {
 }
 function createTask($year, $month, $date, $task)
 {
-    $statement = $pdo->prepare('INSERT INTO tasks ()');
+    // プリペアドステートメント設定
+    $statement = $pdo->prepare('INSERT INTO tasks (user_id, start_date, end_date, task) VALUES (:user_id, :start_date, :end_date, :task)');
+
+    // TIMESTAMP型に合わせて時刻を設定
+    $start_date = date('Y-m-d H:i:s' strtotime($yaer.$month.$date));
+
+    // ステートメントの設定
+    $statement->bindParam(':user_id', $user_id);
+    $statement->bindParam(':start_date', $start_date);
+    $statement->bindParam(':end_date', $end_date);
+    $statement->bindParam(':task', $task);
+
+    // 実行
+    $statement->execute();
 }
 function readTasks($yaer, $month)
 {
