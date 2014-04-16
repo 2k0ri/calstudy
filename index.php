@@ -74,7 +74,6 @@ function buildCalendar($year, $month)
     // eg. $calendar[0][] : 日曜の配列
     $week_index = 0;
     $current_week = $start_weekday;
-    $current_date = 1;
     for ($current_date=1; $current_date <= $end_date; $current_date++) {
         // カレンダー連想配列に日付を代入
         $calendar[$week_index][$current_week++] = $current_date;
@@ -196,7 +195,6 @@ function getHolidays($start_year, $start_month, $end_year = null, $end_month = n
  */
 function getAucTopics()
 {
-
     $xml = simplexml_load_file(AUC_TOPIC_RSS)->channel->item; // SimpleXMLオブジェクトとして取得
     if (empty($xml)) {
         return;
