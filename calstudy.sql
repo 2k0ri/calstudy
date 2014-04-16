@@ -1,0 +1,17 @@
+CREATE TABLE users (
+	user_id INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	name VARCHAR(127),
+	email VARCHAR(255)
+);
+CREATE TABLE tasks (
+	task_id INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+	start_date TIMESTAMP,
+	end_date TIMESTAMP,
+	task TEXT
+	INDEX (start_date)
+);
+CREATE TABLE user_task (
+	user_id INT UNSIGNED NOT NULL,
+	task_id INT UNSIGNED NOT NULL
+	INDEX (user_id, task_id)
+);
