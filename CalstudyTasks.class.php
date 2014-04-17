@@ -11,9 +11,13 @@ class CalstudyTasks
     const CREATE_QUERY_MAP = 'INSERT INTO calstudy_user_task (user_id, task_id) VALUES (?, ?)';
     // ユーザー登録クエリ
     const CREATE_USER = 'INSERT INTO calstudy_users (email, name) VALUES (?, ?)';
+    // 予定読み込みクエリ
+    // @TODO: INNER JOIN
     const READ_QUERY = 'SELECT * FROM calstudy_tasks WHERE (start_date BETWEEN ? AND ?) AND state != \'deleted\'';
     // @TODO: クエリ書き込み
     const UPDATE_QUERY = '';
+    // 予定削除クエリ
+    // DELETE文ではなく、stateを更新する論理削除
     const DELETE_QUERY = '';
 
     private $mysqli;
@@ -102,7 +106,7 @@ class CalstudyTasks
         var_dump($start_date);
         echo '<br>';
         // プリペアドステートメント登録
-        // TODO: エラーを吐かれている
+        // @TODO: エラーを吐かれている
         $stmt->bind_param('sss', $start_date, $task_title, $task_detail);
 
         $stmt->execute(); // 実行
