@@ -113,25 +113,25 @@ function dayInfo($calendarAry, $weekday, $date = null)
     // 日付がある場合は桁数整形、年月日をクラスに追加
     if (isset($date)) {
         $date = sprintf('%02d', $date);
-        array_push($class, $year.'-'.$month.'-'.$date);
+        $class[] = $year.'-'.$month.'-'.$date;
     }
 
     // 曜日判定
     switch ($weekday) {
         case 0: // 日曜
-            array_push($class, 'sunday');
+            $class[] = 'sunday';
             break;
         case 6: // 土曜
-            array_push($class, 'saturday');
+            $class[] = 'saturday';
             break;
     }
     // 今日の判定
     if (isset($date) && $today['year'] == $year && $today['mon'] == $month && $today['mday'] == ltrim($date, 0)) {
-        array_push($class, 'today');
+        $class[] = 'today';
     }
     // 祝日判定
     if (isset($date) && isset($holidays[$year.'-'.$month.'-'.$date])) {
-        array_push($class, 'holiday');
+        $class[] = 'holiday';
     }
 
     // 空の場合は何も返さない
