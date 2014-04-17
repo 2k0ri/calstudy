@@ -227,50 +227,6 @@ function shortenStr($str, $len = 20)
         return mb_substr($str, 0, $len).'...';
     }
 }
-/**
- * PDOでデータベース接続
- * mysql> create database calstudy;
- * mysql> grant all privileges on calstudy.* to calstudy@localhost identified by 'passwd';
- */
-try {
-    $pdo = new PDO(
-        'mysql:host=localhost;dbname=calstudy;charset=utf8', // データベース接続先
-        'calstudy', // MySQLユーザー名
-        'passwd' // MySQLユーザーパスワード
-    );
-    $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false); // 高速化
-} catch (PDOException $e) {
-    exit('データベース接続失敗 '.$e->getMessage());
-}
-function createTask($year, $month, $date, $task)
-{
-    // プリペアドステートメント設定
-    $statement = $pdo->prepare('INSERT INTO tasks (user_id, start_date, end_date, task) VALUES (:user_id, :start_date, :end_date, :task)');
-
-    // TIMESTAMP型に合わせて時刻を設定
-    $start_date = date('Y-m-d H:i:s', strtotime($yaer.$month.$date));
-
-    // ステートメントの設定
-    $statement->bindParam(':user_id', $user_id);
-    $statement->bindParam(':start_date', $start_date);
-    $statement->bindParam(':end_date', $end_date);
-    $statement->bindParam(':task', $task);
-
-    // 実行
-    $statement->execute();
-}
-function readTasks($yaer, $month)
-{
-    $statement->fetch(PDO::FETCH_ASSOC);
-}
-function updateTask($task_id, $task)
-{
-
-}
-function deleteTask($task_id)
-{
-
-}
 ?>
 <!DOCTYPE html>
 <html>
