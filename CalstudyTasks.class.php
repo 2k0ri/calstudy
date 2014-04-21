@@ -13,14 +13,14 @@ class CalstudyTasks
     const CREATE_USER_QUERY = 'INSERT INTO calstudy_users (email, name) VALUES (?, ?)';
     // 予定読み込みクエリ
     // @TODO: INNER JOIN
-    const READ_QUERY = 'SELECT * FROM calstudy_tasks WHERE (start_date BETWEEN ? AND ?) AND is_deleted = 0';
+    const READ_QUERY = 'SELECT * FROM calstudy_tasks INNER JOIN (calstudy_user_task INNER JOIN calstudy_users ON calstudy_user_task.user_id = calstudy_users.user_id) ON calstudy_users.user_id = ? WHERE (start_date BETWEEN ? AND ?) AND deleted_at = NULL';
     // 予定更新クエリ
     const UPDATE_TASK_QUERY = 'UPDATE calstudy_tasks SET start_date = ?, end_date = ?, task_title = ?, task_detail = ? WHERE task_id = ?';
     const UPDATE_USER_QUERY = 'UPDATE calstudy_users SET name = ?, email = ? WHERE user_id = ?';
     // 予定削除クエリ
     // DELETE文ではなく、stateを更新する論理削除
-    const DELETE_TASK_QUERY = 'UPDATE calstudy_tasks SET is_deleted = 1';
-    const DELETE_USER_QUERY = 'UPDATE calstudy_users SET is_deleted = 1';
+    const DELETE_TASK_QUERY = 'UPDATE calstudy_tasks SET deleted_at = NOW() WHERE task_id = ?';
+    const DELETE_USER_QUERY = 'UPDATE calstudy_users SET deleted_at = NOW() WHERE user_id = ?';
 
     private $mysqli;
     private $user_id;
@@ -84,7 +84,7 @@ class CalstudyTasks
         $year = sprintf('%04d', $year);
         $month = sprintf('%02d', $month);
 
-        if ($day == 't') {
+        if ($day === 't') {
             $day = date('t', strtotime($year.$month.'01'));
         }
         $day = sprintf('%02d', $day);
