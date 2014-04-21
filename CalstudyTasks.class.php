@@ -6,15 +6,16 @@
 class CalstudyTasks
 {
     // 予定登録クエリ
-    const CREATE_QUERY_REGISTER = 'INSERT INTO calstudy_tasks (start_date, task_title, task_detail) VALUES (?, ?, ?)';
+    const CREATE_QUERY_REGISTER = 'INSERT INTO calstudy_tasks (start_date, task_title, task_detail, created_date) VALUES (?, ?, ?, NOW())';
     // 予定マッピングクエリ
-    const CREATE_QUERY_MAP = 'INSERT INTO calstudy_user_task (user_id, task_id) VALUES (?, ?)';
+    const CREATE_QUERY_MAP = 'INSERT INTO calstudy_user_task (user_id, task_id) VALUES (?, LAST_INSERT_ID())';
     // ユーザー登録クエリ
     const CREATE_USER = 'INSERT INTO calstudy_users (email, name) VALUES (?, ?)';
     // 予定読み込みクエリ
     // @TODO: INNER JOIN
     const READ_QUERY = 'SELECT * FROM calstudy_tasks WHERE (start_date BETWEEN ? AND ?) AND state != \'deleted\'';
     // @TODO: クエリ書き込み
+    // modified_dateにNOW()
     const UPDATE_QUERY = '';
     // 予定削除クエリ
     // DELETE文ではなく、stateを更新する論理削除
@@ -32,6 +33,12 @@ class CalstudyTasks
             'passwd', // パスワード
             'calstudy' // データベース
         );
+        // エラー処理
+        if (mysqli_connect_errno()) {
+            printf("Connect failed: %s\n", mysqli_connect_error());
+            exit();
+        }
+
         $this->mysqli->set_charset('utf-8');
 
         if (!empty($email)) {
@@ -49,12 +56,11 @@ class CalstudyTasks
 
     /**
      * メールアドレスからユーザーを作成
-     * クラスメソッドとしての使用(CalstudyTasks::createUser())を想定
      * @param  string $email [description]
      * @param  string $name [description]
      * @return int        ユーザーID
      */
-    static function createUser($email, $name)
+    function createUser($email, $name)
     {
         $stmt = $this->mysqli->prepare(CREATE_USER);
 
@@ -62,7 +68,7 @@ class CalstudyTasks
 
         $stmt->execute();
         $stmt->close();
-        return $stmt->insert_id;
+        return $this->user_id = $stmt->insert_id; // user_idメンバ変数にIDを格納
     }
 
     /**
@@ -103,23 +109,34 @@ class CalstudyTasks
         $stmt = $this->mysqli->prepare(CREATE_QUERY_REGISTER);
         // TIMESTAMP型に合わせて時刻を設定
         $start_date = $this->encodeTimestamp($year, $month, $date);
-        var_dump($start_date);
+
+        // @debug
+        var_dump($start_date, $task_title, $task_detail);
         echo '<br>';
+
         // プリペアドステートメント登録
         // @TODO: エラーを吐かれている
         $stmt->bind_param('sss', $start_date, $task_title, $task_detail);
 
         $stmt->execute(); // 実行
-        $task_id = $stmt->insert_id; // REGISTERで登録した予定のtask_idを取得
         $stmt->close(); // 予定作成SQLを開放
+        $task_id = $stmt->insert_id; // REGISTERで登録した予定のtask_idを取得
+        // エラーが返っている場合はロールバック
+        if ($mysqli->sqlstate != '00000') {
+            $mysqli->rollback();
+        }
 
         // マッピングテーブル登録SQLのプリペアドステートメント設定
         $stmt = $this->mysqli->prepare(CREATE_QUERY_MAP);
         // プリペアドステートメント登録
-        $stmt->bind_param('ii', $this->user_id, $task_id);
+        $stmt->bind_param('i', $this->user_id);
 
         $stmt->execute();
         $stmt->close();
+        // エラーが返っている場合はロールバック
+        if ($mysqli->sqlstate != '00000') {
+            $mysqli->rollback();
+        }
 
         // コミット
         $this->mysqli->commit();
@@ -164,6 +181,7 @@ class CalstudyTasks
     }
 }
 
-$calstudy_tasks = new CalstudyTasks('kori@aucfan.com');
-$calstudy_tasks->create(2014, 4, 16, 'DB実装', 'データベース実装');
+$calstudy_tasks = new CalstudyTasks();
+$calstudy_tasks->createUser('esc13245@gmail.com', '2k0ri');
+// $calstudy_tasks->create(2014, 4, 16, 'DB実装', 'データベース実装');
 var_dump($calstudy_tasks);
