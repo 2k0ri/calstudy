@@ -5,15 +5,17 @@
  */
 class CalstudyTasks
 {
+    // ユーザーID取得クエリ
+    const READ_USER_QUERY = 'SELECT user_id FROM calstudy_users WHERE email = ? AND deleted_at IS NULL';
     // 予定登録クエリ
-    const CREATE_REGISTER_QUERY = 'INSERT INTO calstudy_tasks (start_date, task_title, task_detail) VALUES (?, ?, ?)';
+    const CREATE_REGISTER_QUERY = 'INSERT INTO calstudy_tasks (start_date, task_title, task_detail, created_at) VALUES (?, ?, ?, NULL)';
     // 予定マッピングクエリ
-    const CREATE_MAP_QUERY = 'INSERT INTO calstudy_user_task (user_id, task_id) VALUES (?, LAST_INSERT_ID())';
+    const CREATE_MAP_QUERY = 'INSERT INTO calstudy_user_task (user_id, task_id, created_at) VALUES (?, LAST_INSERT_ID(), NULL)';
     // ユーザー登録クエリ
-    const CREATE_USER_QUERY = 'INSERT INTO calstudy_users (email, name) VALUES (?, ?)';
+    const CREATE_USER_QUERY = 'INSERT INTO calstudy_users (email, name, created_at) VALUES (?, ?, NULL)';
     // 予定読み込みクエリ
     // @TODO: INNER JOIN
-    const READ_QUERY = 'SELECT * FROM calstudy_tasks INNER JOIN (calstudy_user_task INNER JOIN calstudy_users ON calstudy_user_task.user_id = calstudy_users.user_id) ON calstudy_users.user_id = ? WHERE (start_date BETWEEN ? AND ?) AND deleted_at = NULL';
+    const READ_TASK_QUERY = 'SELECT * FROM calstudy_tasks INNER JOIN (calstudy_user_task INNER JOIN calstudy_users ON calstudy_user_task.user_id = calstudy_users.user_id) ON calstudy_users.user_id = ? WHERE (start_date BETWEEN ? AND ?) AND deleted_at IS NULL';
     // 予定更新クエリ
     const UPDATE_TASK_QUERY = 'UPDATE calstudy_tasks SET start_date = ?, end_date = ?, task_title = ?, task_detail = ? WHERE task_id = ?';
     const UPDATE_USER_QUERY = 'UPDATE calstudy_users SET name = ?, email = ? WHERE user_id = ?';
@@ -44,8 +46,12 @@ class CalstudyTasks
 
         if (!empty($email)) {
             // ユーザーIDを取得
-            $this->user_id = $this->mysqli->query('SELECT user_id FROM calstudy_users WHERE email = \''.$email.'\' AND is_deleted = 0')->fetch_row();
-            $this->user_id = $this->user_id[0];
+            $stmt = $this->mysqli->prepare(self::READ_USER_QUERY);
+            $stmt->bind_param('s', $email); // メールアドレスをSQLにバインド
+            $stmt->bind_result($this->user_id); // 結果をuser_idプロパティに格納するように指示
+            $stmt->execute(); // SQLを実行
+            $stmt->fetch(); // 結果を変数に格納
+            $stmt->close(); // ステートメントを開放
         }
     }
 
@@ -107,7 +113,7 @@ class CalstudyTasks
         $this->mysqli->autocommit(FALSE);
 
         // 予定作成SQLのプリペアドステートメント設定
-        $stmt = $this->mysqli->prepare(CalstudyTasks::CREATE_REGISTER_QUERY);
+        $stmt = $this->mysqli->prepare(self::CREATE_REGISTER_QUERY);
         // TIMESTAMP型に合わせて時刻を設定
         $start_date = $this->encodeTimestamp($year, $month, $date);
 
@@ -128,7 +134,7 @@ class CalstudyTasks
         }
 
         // マッピングテーブル登録SQLのプリペアドステートメント設定
-        $stmt = $this->mysqli->prepare(CalstudyTasks::CREATE_MAP_QUERY);
+        $stmt = $this->mysqli->prepare(self::CREATE_MAP_QUERY);
         // プリペアドステートメント登録
         $stmt->bind_param('i', $this->user_id);
 
@@ -182,8 +188,7 @@ class CalstudyTasks
     }
 }
 
-$calstudy_tasks = new CalstudyTasks();
-// @debug
-$calstudy_tasks->createUser('esc13245@gmail.com', '2k0ri');
-$calstudy_tasks->createTask(2014, 4, 16, 'DB実装', 'データベース実装');
+$calstudy_tasks = new CalstudyTasks('kori@aucfan.com');
+// $calstudy_tasks->createUser('kori@aucfan.com', 'Kei Kori');
+// $calstudy_tasks->createTask(2014, 4, 16, 'DB実装', 'データベース実装');
 var_dump($calstudy_tasks);
