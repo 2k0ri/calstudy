@@ -16,6 +16,8 @@ class CalstudyTasks
     const CREATE_USER_QUERY = 'INSERT INTO calstudy_users (email, name, created_at) VALUES (?, ?, NULL)';
     // 予定読み込みクエリ
     const READ_TASK_QUERY = 'SELECT tasks.task_id, start_date, end_date, task_title, task_detail, user_id FROM calstudy_tasks tasks INNER JOIN calstudy_user_task map ON tasks.task_id = map.task_id WHERE user_id = ? AND (start_date BETWEEN ? AND ?) AND tasks.deleted_at IS NULL ORDER BY start_date DESC';
+    // 特定の予定の読み込みクエリ
+    const READ_TASK_DETAIL_QUERY = 'SELECT tasks.task_id, start_date, end_date, task_title, task_detail, GROUP_CONCAT(users.user_id) user_id, GROUP_CONCAT(email) email FROM calstudy_tasks tasks INNER JOIN (calstudy_user_task map INNER JOIN calstudy_users users ON map.user_id = users.user_id) ON tasks.task_id = map.task_id WHERE tasks.task_id = ? AND tasks.deleted_at IS NULL ORDER BY start_date DESC';
     // 予定更新クエリ
     const UPDATE_TASK_QUERY = 'UPDATE calstudy_tasks SET start_date = ?, end_date = ?, task_title = ?, task_detail = ? WHERE task_id = ?';
     const UPDATE_USER_QUERY = 'UPDATE calstudy_users SET name = ?, email = ? WHERE user_id = ?';
@@ -189,17 +191,6 @@ class CalstudyTasks
 
         $results = $this->fetch_all($stmt);
 var_dump($results);
-echo "<br>";
-
-        $format = array();
-
-        // 日付をキーとする連想配列に再変換
-        foreach ($results as $result) {
-            // タイムスタンプを日付と時分に分割
-            $result['start_time'] = date('H:i', strtotime($result['start_date']));
-            $result['start_date'] = date('Y-m-d', strtotime($result['start_date']));
-            $format[$result['start_date']] = $result;
-        }
 
         $stmt->close();
         return $results;
@@ -212,7 +203,13 @@ echo "<br>";
      */
     function readTask($task_id)
     {
-        // @TODO
+        $stmt = $this->mysqli->prepare(self::READ_TASK_DETAIL_QUERY);
+        $stmt->bind_param('i', $task_id);
+        $stmt->execute();
+        $results = $this->fetch_all($stmt);
+var_dump($results);
+        $stmt->close();
+        return $results;
     }
 
     function update($task_id, $year, $month, $date, $task_title, $task_details)
@@ -222,11 +219,17 @@ echo "<br>";
 
     function delete($task_id)
     {
-        // @TODO
+        $stmt = $this->mysqli->prepare(self::DELETE_TASK_QUERY);
+        $stmt->bind_param('i', $task_id);
+        $is_deleted = $stmt->execute();
+        $stmt->close();
+        return $is_deleted;
     }
 }
 
 $calstudy_tasks = new CalstudyTasks('kori@aucfan.com');
 // $calstudy_tasks->createUser('kori@aucfan.com', 'Kei Kori');
 // $calstudy_tasks->createTask(2014, 4, 16, 'DB実装', 'データベース実装');
-$calstudy_tasks->read(2014, 4, 2014, 4);
+// $calstudy_tasks->read(2014, 4, 2014, 4);
+// var_dump($calstudy_tasks->delete(13));
+$calstudy_tasks->readTask(10);
