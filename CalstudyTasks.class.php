@@ -1,7 +1,8 @@
 <?php
 /**
  * 予定にまつわるクラス
- * 予定のCRUD処理を内包
+ * 予定/ユーザーのCRUD処理を内包
+ * インスタンス生成時にはメールアドレスを引数にとってユーザーを特定
  */
 class CalstudyTasks
 {
@@ -10,12 +11,11 @@ class CalstudyTasks
     // 予定登録クエリ
     const CREATE_REGISTER_QUERY = 'INSERT INTO calstudy_tasks (start_date, task_title, task_detail, created_at) VALUES (?, ?, ?, NULL)';
     // 予定マッピングクエリ
-    const CREATE_MAP_QUERY = 'INSERT INTO calstudy_user_task (user_id, task_id, created_at) VALUES (?, LAST_INSERT_ID(), NULL)';
+    const CREATE_MAP_QUERY = 'INSERT INTO calstudy_user_task (user_id, task_id, created_at) VALUES (?, ?, NULL)';
     // ユーザー登録クエリ
     const CREATE_USER_QUERY = 'INSERT INTO calstudy_users (email, name, created_at) VALUES (?, ?, NULL)';
     // 予定読み込みクエリ
-    // @TODO: INNER JOIN
-    const READ_TASK_QUERY = 'SELECT * FROM calstudy_tasks INNER JOIN (calstudy_user_task INNER JOIN calstudy_users ON calstudy_user_task.user_id = calstudy_users.user_id) ON calstudy_users.user_id = ? WHERE (start_date BETWEEN ? AND ?) AND deleted_at IS NULL';
+    const READ_TASK_QUERY = 'SELECT tasks.task_id, start_date, end_date, task_title, task_detail, user_id FROM calstudy_tasks tasks INNER JOIN calstudy_user_task map ON tasks.task_id = map.task_id WHERE user_id = ? AND (start_date BETWEEN ? AND ?) AND tasks.deleted_at IS NULL ORDER BY start_date DESC';
     // 予定更新クエリ
     const UPDATE_TASK_QUERY = 'UPDATE calstudy_tasks SET start_date = ?, end_date = ?, task_title = ?, task_detail = ? WHERE task_id = ?';
     const UPDATE_USER_QUERY = 'UPDATE calstudy_users SET name = ?, email = ? WHERE user_id = ?';
@@ -48,7 +48,7 @@ class CalstudyTasks
             // ユーザーIDを取得
             $stmt = $this->mysqli->prepare(self::READ_USER_QUERY);
             $stmt->bind_param('s', $email); // メールアドレスをSQLにバインド
-            $stmt->bind_result($this->user_id); // 結果をuser_idプロパティに格納するように指示
+            $stmt->bind_result($this->user_id); // 結果をuser_idプロパティに格納するようにバインド
             $stmt->execute(); // SQLを実行
             $stmt->fetch(); // 結果を変数に格納
             $stmt->close(); // ステートメントを開放
@@ -62,6 +62,30 @@ class CalstudyTasks
     }
 
     /**
+     * mysqliでexecute結果を連想配列で取得する
+     * @link http://www.akiyan.com/blog/archives/2011/07/php-mysqli-fetchall.html
+     * @param $stmt
+     * @return array
+     */
+    function fetch_all(& $stmt) {
+        $hits = array();
+        $params = array();
+        $meta = $stmt->result_metadata();
+        while ($field = $meta->fetch_field()) {
+            $params[] = &$row[$field->name];
+        }
+        call_user_func_array(array($stmt, 'bind_result'), $params);
+        while ($stmt->fetch()) {
+            $c = array();
+            foreach($row as $key => $val) {
+                $c[$key] = $val;
+            }
+            $hits[] = $c;
+        }
+        return $hits;
+    }
+
+    /**
      * メールアドレスからユーザーを作成
      * @param  string $email [description]
      * @param  string $name [description]
@@ -71,7 +95,6 @@ class CalstudyTasks
     {
         $stmt = $this->mysqli->prepare(self::CREATE_USER_QUERY);
         $stmt->bind_param('ss', $email, $name);
-
         $stmt->execute();
         $this->user_id = $stmt->insert_id; // user_idメンバ変数にIDを格納
         $stmt->close();
@@ -116,33 +139,27 @@ class CalstudyTasks
         $stmt = $this->mysqli->prepare(self::CREATE_REGISTER_QUERY);
         // TIMESTAMP型に合わせて時刻を設定
         $start_date = $this->encodeTimestamp($year, $month, $date);
-
-        // @debug
-        var_dump($start_date, $task_title, $task_detail);
-        echo '<br>';
-
         // プリペアドステートメント登録
-        // @TODO: エラーを吐かれている
         $stmt->bind_param('sss', $start_date, $task_title, $task_detail);
 
         $stmt->execute(); // 実行
-        $stmt->close(); // 予定作成SQLを開放
         $task_id = $stmt->insert_id; // REGISTERで登録した予定のtask_idを取得
+        $stmt->close(); // 予定作成SQLを開放
         // エラーが返っている場合はロールバック
-        if ($mysqli->sqlstate != '00000') {
-            $mysqli->rollback();
+        if ($this->mysqli->sqlstate != '00000') {
+            $this->mysqli->rollback();
         }
 
         // マッピングテーブル登録SQLのプリペアドステートメント設定
         $stmt = $this->mysqli->prepare(self::CREATE_MAP_QUERY);
         // プリペアドステートメント登録
-        $stmt->bind_param('i', $this->user_id);
+        $stmt->bind_param('ii', $this->user_id, $task_id);
 
         $stmt->execute();
         $stmt->close();
         // エラーが返っている場合はロールバック
-        if ($mysqli->sqlstate != '00000') {
-            $mysqli->rollback();
+        if ($this->mysqli->sqlstate != '00000') {
+            $this->mysqli->rollback();
         }
 
         // コミット
@@ -164,7 +181,28 @@ class CalstudyTasks
     {
         // TIMESTAMP型に合わせて時刻を設定
         $start_date = $this->encodeTimestamp($start_year, $start_month);
-        $end_date = $this->encodeTimestamp($end_year, $end_month, 't');
+        $end_date = $this->encodeTimestamp($end_year, $end_month, 't', 23, 59, 59);
+        $stmt = $this->mysqli->prepare(self::READ_TASK_QUERY);
+        $stmt->bind_param('iss', $this->user_id, $start_date, $end_date);
+
+        $stmt->execute();
+
+        $results = $this->fetch_all($stmt);
+var_dump($results);
+echo "<br>";
+
+        $format = array();
+
+        // 日付をキーとする連想配列に再変換
+        foreach ($results as $result) {
+            // タイムスタンプを日付と時分に分割
+            $result['start_time'] = date('H:i', strtotime($result['start_date']));
+            $result['start_date'] = date('Y-m-d', strtotime($result['start_date']));
+            $format[$result['start_date']] = $result;
+        }
+
+        $stmt->close();
+        return $results;
     }
 
     /**
@@ -191,4 +229,4 @@ class CalstudyTasks
 $calstudy_tasks = new CalstudyTasks('kori@aucfan.com');
 // $calstudy_tasks->createUser('kori@aucfan.com', 'Kei Kori');
 // $calstudy_tasks->createTask(2014, 4, 16, 'DB実装', 'データベース実装');
-var_dump($calstudy_tasks);
+$calstudy_tasks->read(2014, 4, 2014, 4);
