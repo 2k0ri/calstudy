@@ -271,7 +271,7 @@ function deleteTask($task_id)
     <div class="container">
         <nav class="nav">
             <a href="<?php echo '?year='.$last['year'].'&month='.$last['month'] ?>" class="last">先月</a>
-            <a href="/calstudy/" class="this_month">今月</a>
+            <a href="./" class="this_month">今月</a>
             <a href="<?php echo '?year='.$next['year'].'&month='.$next['month'] ?>" class="next">来月</a>
 
             <form action="" id="combo">
